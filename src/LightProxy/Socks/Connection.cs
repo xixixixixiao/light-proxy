@@ -52,12 +52,21 @@ public class Connection
         var upstream   = new NetworkStream(_client, true);
         var downstream = new NetworkStream(_transfer, true);
 
+        try
         {
-            using var tunnel = new TcpTwoWayTunnel();
-            await tunnel.Run(upstream, downstream);
-        }
+            var up   = upstream.CopyToAsync(downstream);
+            var down = downstream.CopyToAsync(upstream);
 
-        Close();
+            Task.WaitAny(up, down);
+        }
+        catch (Exception)
+        {
+            //
+        }
+        finally
+        {
+            Close();
+        }
     }
 
     public void Close()
